@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entidad Recaudadora — Consulta GraphQL y Pago por Socket TCP</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --border: #334155;
+            --accent: #f59e0b;
+            --green: #10b981;
+            --red: #ef4444;
+            --blue: #38bdf8;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: #f8fafc;
+            margin: 0;
+            padding: 1.5rem;
+        }
+        .container { max-width: 1120px; margin: 0 auto; }
+        header {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 1px solid var(--border);
+            border-left: 5px solid var(--accent);
+            border-radius: 12px;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        header h1 { margin: 0; font-size: 1.4rem; color: var(--accent); }
+        header p { margin: 0.3rem 0 0; color: #94a3b8; font-size: 0.9rem; }
+        .badges span {
+            display: inline-block;
+            background: #0f172a;
+            border: 1px solid var(--border);
+            padding: 0.35rem 0.7rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            margin-left: 0.4rem;
+            color: #cbd5e1;
+        }
+        .grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 1.25rem; }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+        }
+        .card h2 { margin-top: 0; font-size: 1.1rem; color: var(--blue); border-bottom: 1px solid var(--border); padding-bottom: 0.6rem; }
+        label { display: block; font-size: 0.85rem; color: #cbd5e1; margin-bottom: 0.3rem; font-weight: 600; }
+        input, select, textarea {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid var(--border);
+            color: #f8fafc;
+            padding: 0.6rem 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 0.9rem;
+            font-size: 0.95rem;
+        }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+        button {
+            border: none;
+            padding: 0.7rem 1.2rem;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: opacity 0.15s;
+        }
+        button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-graphql { background: #ec4899; color: white; width: 100%; }
+        .btn-socket { background: var(--green); color: #052e16; width: 100%; margin-top: 0.75rem; font-size: 1rem; }
+        .status-box {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            border: 1px solid var(--border);
+            background: #0f172a;
+        }
+        .status-ok { border-color: var(--green); background: rgba(16, 185, 129, 0.1); }
+        .status-err { border-color: var(--red); background: rgba(239, 68, 68, 0.1); }
+        .checklist { list-style: none; padding: 0; margin: 0.6rem 0; font-size: 0.9rem; }
+        .checklist li { margin-bottom: 0.35rem; }
+        pre {
+            background: #090d16;
+            color: #38bdf8;
+            padding: 0.9rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.8rem;
+            border: 1px solid #1e293b;
+            max-height: 220px;
+        }
+        .field-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 0.9rem;
+            background: #0f172a;
+            padding: 0.6rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        .field-selector label {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            margin: 0;
+            font-weight: normal;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .field-selector input { width: auto; margin: 0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div>
+            <h1>🏦 ENTIDAD RECAUDADORA AUTORIZADA (Módulo de Caja)</h1>
+            <p>1. Verificación flexible mediante cliente GraphQL (Node.js :4000) &nbsp;|&nbsp; 2. Registro de Pago en tiempo real vía Socket TCP (Java :5000)</p>
+        </div>
+        <div class="badges">
+            <span>GraphQL :4000</span>
+            <span>Java TCP Socket :5000</span>
+        </div>
+    </header>
+
+    <div class="grid">
+        <div class="card">
+            <h2>1. Consulta y Validación de Boleta (Cliente GraphQL)</h2>
+            <div class="row">
+                <div>
+                    <label>Código Único de Boleta:</label>
+                    <input type="text" id="codigo_unico" value="BOL-1001" placeholder="Ej: BOL-1001">
+                </div>
+                <div>
+                    <label>CI del Conductor que presenta el pago:</label>
+                    <input type="text" id="ci_conductor" value="1234567" placeholder="Ej: 1234567">
+                </div>
+            </div>
+            <div>
+                <label>Entidad Recaudadora / Cajero:</label>
+                <input type="text" id="entidad" value="Banco Unión - Agencia Central">
+            </div>
+
+            <label>Campos exactos a solicitar en la consulta GraphQL (Flexibilidad GraphQL):</label>
+            <div class="field-selector" id="camposGraphql">
+                <label><input type="checkbox" value="codigo_unico" checked disabled> codigo_unico</label>
+                <label><input type="checkbox" value="ci_conductor" checked> ci_conductor</label>
+                <label><input type="checkbox" value="nombre_conductor" checked> nombre_conductor</label>
+                <label><input type="checkbox" value="placa" checked> placa</label>
+                <label><input type="checkbox" value="tipo_infraccion" checked> tipo_infraccion</label>
+                <label><input type="checkbox" value="lugar" checked> lugar</label>
+                <label><input type="checkbox" value="fecha" checked> fecha</label>
+                <label><input type="checkbox" value="monto" checked> monto</label>
+                <label><input type="checkbox" value="estado" checked> estado</label>
+            </div>
+
+            <button class="btn-graphql" onclick="validarBoletaGraphQL()">
+                🔍 1. Consultar y Validar Boleta con GraphQL (Node.js)
+            </button>
+
+            <div id="panelValidacion" class="status-box" style="display:none;"></div>
+
+            <button id="btnPagarSocket" class="btn-socket" onclick="registrarPagoSocketTCP()" disabled>
+                💳 2. Autorizar Cobro y Registrar Pago por Socket TCP (Java :5000)
+            </button>
+
+            <div id="panelPagoSocket" class="status-box" style="display:none;"></div>
+        </div>
+
+        <div class="card">
+            <h2>2. Inspector en Tiempo Real (GraphQL &amp; Socket TCP)</h2>
+            <label>Query GraphQL Construido y Enviado a <code>http://localhost:4000/graphql</code>:</label>
+            <pre id="preQuery">// Presione "Consultar y Validar Boleta con GraphQL"</pre>
+
+            <label>Respuesta JSON del Servidor GraphQL (Node.js):</label>
+            <pre id="preGraphqlResp">// Sin consulta aún</pre>
+
+            <label>Trama y Respuesta del Servidor Socket TCP (Java Puerto 5000):</label>
+            <pre id="preSocketResp">// El pago por Socket TCP se habilitará sólo cuando GraphQL autorice el cobro.</pre>
+        </div>
+    </div>
+</div>
+
+<script>
+    let boletaAutorizada = null;
+
+    function obtenerCamposSeleccionados() {
+        const checks = document.querySelectorAll('#camposGraphql input[type="checkbox"]:checked');
+        return Array.from(checks).map(c => c.value);
+    }
+
+    async function validarBoletaGraphQL() {
+        const codigo = document.getElementById('codigo_unico').value.trim();
+        const ci = document.getElementById('ci_conductor').value.trim();
+        const campos = obtenerCamposSeleccionados().join('\n      ');
+
+        const query = `query {
+  validarMultaParaPago(codigo_unico: "${codigo}", ci_conductor: "${ci}") {
+    existe
+    pertenece_conductor
+    ya_pagada
+    autorizado_cobro
+    mensaje
+    multa {
+      ${campos}
+    }
+  }
+}`;
+
+        document.getElementById('preQuery').textContent = query;
+        document.getElementById('panelPagoSocket').style.display = 'none';
+
+        try {
+            const res = await fetch('http://localhost:4000/graphql', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query })
+            });
+            const json = await res.json();
+            document.getElementById('preGraphqlResp').textContent = JSON.stringify(json, null, 2);
+
+            const v = json.data && json.data.validarMultaParaPago;
+            const panel = document.getElementById('panelValidacion');
+            const btnPagar = document.getElementById('btnPagarSocket');
+            panel.style.display = 'block';
+
+            if (!v) {
+                panel.className = 'status-box status-err';
+                panel.innerHTML = `<strong>Error en respuesta GraphQL</strong>`;
+                btnPagar.disabled = true;
+                return;
+            }
+
+            const iconExiste = v.existe ? '✅' : '❌';
+            const iconPertenece = v.pertenece_conductor ? '✅' : '❌';
+            const iconNoPagada = (v.existe && !v.ya_pagada) ? '✅' : '❌';
+
+            let detallesMulta = '';
+            if (v.multa) {
+                detallesMulta = `<div style="margin-top:0.6rem; padding-top:0.6rem; border-top:1px solid #334155; font-size:0.88rem;">
+                    <strong>Conductor:</strong> ${v.multa.nombre_conductor || '-'} (CI: ${v.multa.ci_conductor || '-'})<br>
+                    <strong>Infracción:</strong> ${v.multa.tipo_infraccion || '-'} | <strong>Lugar:</strong> ${v.multa.lugar || '-'}<br>
+                    <strong>Monto:</strong> <span style="color:#f59e0b;font-weight:bold;">Bs. ${v.multa.monto !== undefined ? Number(v.multa.monto).toFixed(2) : '-'}</span>
+                    | <strong>Estado Actual:</strong> <code>${v.multa.estado || '-'}</code>
+                </div>`;
+            }
+
+            panel.className = 'status-box ' + (v.autorizado_cobro ? 'status-ok' : 'status-err');
+            panel.innerHTML = `
+                <div><strong>${v.mensaje}</strong></div>
+                <ul class="checklist">
+                    <li>${iconExiste} 1. ¿La boleta existe en el sistema?: <strong>${v.existe ? 'SÍ' : 'NO'}</strong></li>
+                    <li>${iconPertenece} 2. ¿Emitida para ese conductor (CI ${ci})?: <strong>${v.pertenece_conductor ? 'SÍ' : 'NO'}</strong></li>
+                    <li>${iconNoPagada} 3. ¿No ha sido pagada previamente?: <strong>${!v.ya_pagada && v.existe ? 'NO PAGADA (Pendiente)' : (v.ya_pagada ? 'YA FUE PAGADA' : 'N/A')}</strong></li>
+                </ul>
+                ${detallesMulta}
+            `;
+
+            if (v.autorizado_cobro) {
+                boletaAutorizada = { codigo_unico: codigo, ci_conductor: ci };
+                btnPagar.disabled = false;
+            } else {
+                boletaAutorizada = null;
+                btnPagar.disabled = true;
+            }
+        } catch (err) {
+            document.getElementById('preGraphqlResp').textContent = 'Error conectando a GraphQL (http://localhost:4000/graphql): ' + err.message;
+        }
+    }
+
+    async function registrarPagoSocketTCP() {
+        if (!boletaAutorizada) return;
+        const entidad = document.getElementById('entidad').value.trim();
+        const btnPagar = document.getElementById('btnPagarSocket');
+        btnPagar.disabled = true;
+
+        try {
+            const res = await fetch('/api/pagar-socket', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    codigo_unico: boletaAutorizada.codigo_unico,
+                    ci_conductor: boletaAutorizada.ci_conductor,
+                    entidad
+                })
+            });
+            const json = await res.json();
+            document.getElementById('preSocketResp').textContent = JSON.stringify(json, null, 2);
+
+            const panelPago = document.getElementById('panelPagoSocket');
+            panelPago.style.display = 'block';
+
+            if (json.exito) {
+                panelPago.className = 'status-box status-ok';
+                panelPago.innerHTML = `✅ <strong>PAGO REGISTRADO VÍA SOCKET TCP (JAVA):</strong><br>
+                <code>${json.respuesta_socket}</code><br>
+                <small>El estado de la boleta cambió instantáneamente de "pendiente" a "pagada".</small>`;
+                // Re-consultar por GraphQL para reflejar el nuevo estado "pagada"
+                await validarBoletaGraphQL();
+            } else {
+                panelPago.className = 'status-box status-err';
+                panelPago.innerHTML = `❌ <strong>ERROR EN SOCKET TCP:</strong><br><code>${json.respuesta_socket || json.error}</code>`;
+            }
+        } catch (err) {
+            document.getElementById('preSocketResp').textContent = 'Error: ' + err.message;
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+#!/usr/bin/env php
+<?php
+
+use Symfony\Component\Console\Input\ArgvInput;
+
+define('LARAVEL_START', microtime(true));
+
+$autoload = file_exists(__DIR__.'/vendor/autoload.php')
+    ? __DIR__.'/vendor/autoload.php'
+    : __DIR__.'/../../sistemafinal/vendor/autoload.php';
+
+$loader = require $autoload;
+$loader->setPsr4('App\\', __DIR__.'/app/');
+$loader->setPsr4('Database\\Factories\\', __DIR__.'/database/factories/');
+$loader->setPsr4('Database\\Seeders\\', __DIR__.'/database/seeders/');
+
+$app = require_once __DIR__.'/bootstrap/app.php';
+
+$status = $app->handleCommand(new ArgvInput);
+
+exit($status);

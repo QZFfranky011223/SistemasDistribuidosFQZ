@@ -1,0 +1,11 @@
+{
+  "name": "graphql-multas",
+  "version": "1.0.0",
+  "description": "Servicio GraphQL para consultar multas de transito",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  }
+}
