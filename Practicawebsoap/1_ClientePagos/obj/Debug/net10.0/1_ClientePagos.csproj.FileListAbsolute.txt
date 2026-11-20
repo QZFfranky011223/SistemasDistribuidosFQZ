@@ -1,0 +1,15 @@
+C:\Users\72828\SistemasDistribuidosFQZ\Practicawebsoap\1_ClientePagos\bin\Debug\net10.0\1_ClientePagos.exe
+C:\Users\72828\SistemasDistribuidosFQZ\Practicawebsoap\1_ClientePagos\bin\Debug\net10.0\1_ClientePagos.deps.json
+C:\Users\72828\SistemasDistribuidosFQZ\Practicawebsoap\1_ClientePagos\bin\Debug\net10.0\1_ClientePagos.runtimeconfig.json
+C:\Users\72828\SistemasDistribuidosFQZ\Practicawebsoap\1_ClientePagos\bin\Debug\net10.0\1_ClientePagos.dll
+C:\Users\72828\SistemasDistribuidosFQZ\Practicawebsoap\1_ClientePagos\bin\Debug\net10.0\1_ClientePagos.pdb
+C:\Users\72828\SistemasDistribuidosFQZ\Practicawebsoap\1_ClientePagos\obj\Debug\net10.0\1_ClientePagos.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\72828\SistemasDistribuidosFQZ\Practicawebsoap\1_ClientePagos\obj\Debug\net10.0\1_ClientePagos.AssemblyInfoInputs.cache
+C:\Users\72828\SistemasDistribuidosFQZ\Practicawebsoap\1_ClientePagos\obj\Debug\net10.0\1_ClientePagos.AssemblyInfo.cs
+C:\Users\72828\SistemasDistribuidosFQZ\Practicawebsoap\1_ClientePagos\obj\Debug\net10.0\1_ClientePagos.csproj.CoreCompileInputs.cache
+C:\Users\72828\SistemasDistribuidosFQZ\Practicawebsoap\1_ClientePagos\obj\Debug\net10.0\1_ClientePagos.sourcelink.json
+C:\Users\72828\SistemasDistribuidosFQZ\Practicawebsoap\1_ClientePagos\obj\Debug\net10.0\1_ClientePagos.dll
+C:\Users\72828\SistemasDistribuidosFQZ\Practicawebsoap\1_ClientePagos\obj\Debug\net10.0\refint\1_ClientePagos.dll
+C:\Users\72828\SistemasDistribuidosFQZ\Practicawebsoap\1_ClientePagos\obj\Debug\net10.0\1_ClientePagos.pdb
+C:\Users\72828\SistemasDistribuidosFQZ\Practicawebsoap\1_ClientePagos\obj\Debug\net10.0\1_ClientePagos.genruntimeconfig.cache
+C:\Users\72828\SistemasDistribuidosFQZ\Practicawebsoap\1_ClientePagos\obj\Debug\net10.0\ref\1_ClientePagos.dll

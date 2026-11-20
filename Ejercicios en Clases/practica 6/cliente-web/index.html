@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo Cliente Web — Consulta de Boletas de Infracción en Línea</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --border: #334155;
+            --primary: #38bdf8;
+            --green: #10b981;
+            --amber: #f59e0b;
+            --red: #ef4444;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: #f8fafc;
+            margin: 0;
+            padding: 1.5rem;
+        }
+        .container { max-width: 1050px; margin: 0 auto; }
+        header {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 1px solid var(--border);
+            border-left: 5px solid var(--primary);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        header h1 { margin: 0; font-size: 1.4rem; color: var(--primary); }
+        header p { margin: 0.3rem 0 0; color: #94a3b8; font-size: 0.9rem; }
+        .search-bar {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr auto auto;
+            gap: 0.8rem;
+            align-items: end;
+            margin-bottom: 1.25rem;
+        }
+        label { display: block; font-size: 0.83rem; color: #cbd5e1; margin-bottom: 0.3rem; font-weight: 600; }
+        input {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid var(--border);
+            color: #f8fafc;
+            padding: 0.65rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+        button {
+            background: var(--primary);
+            color: #082f49;
+            border: none;
+            padding: 0.68rem 1.2rem;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.92rem;
+        }
+        button.secondary { background: #334155; color: #f8fafc; }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+        }
+        table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; font-size: 0.92rem; }
+        th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid var(--border); }
+        th { color: #94a3b8; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.65rem;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+        }
+        .badge-pendiente { background: rgba(245, 158, 11, 0.18); color: #fbbf24; border: 1px solid #f59e0b; }
+        .badge-pagada { background: rgba(16, 185, 129, 0.18); color: #34d399; border: 1px solid #10b981; }
+        .badge-anulada { background: rgba(239, 68, 68, 0.18); color: #f87171; border: 1px solid #ef4444; }
+        .alert {
+            padding: 0.9rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            background: #0f172a;
+            border: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div>
+            <h1>🚗 PORTAL DEL CIUDADANO — CONSULTA DE MULTAS DE TRÁNSITO</h1>
+            <p>Conectado al Servicio REST de la Central de Registro (Laravel: <code>GET http://localhost:8000/api/multa</code>)</p>
+        </div>
+        <div>
+            <a href="http://localhost:3001" target="_blank" style="color:#f59e0b;text-decoration:none;font-weight:600;margin-right:1rem;">🏦 Ir a Entidad Recaudadora</a>
+            <a href="http://localhost:4000/graphql" target="_blank" style="color:#ec4899;text-decoration:none;font-weight:600;">⚡ GraphiQL</a>
+        </div>
+    </header>
+
+    <div class="search-bar">
+        <div>
+            <label>Buscar por Código Único de Boleta:</label>
+            <input type="text" id="inputCodigo" placeholder="Ej: BOL-1001">
+        </div>
+        <div>
+            <label>O Buscar por CI del Conductor:</label>
+            <input type="text" id="inputCi" placeholder="Ej: 1234567">
+        </div>
+        <button onclick="consultarBoletas()">🔍 Consultar Estado</button>
+        <button class="secondary" onclick="limpiarYVerTodas()">📋 Ver Todas</button>
+    </div>
+
+    <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <h2 style="margin:0;font-size:1.1rem;color:#38bdf8;">Resultado de Boletas Registradas en la Central</h2>
+            <small id="lblEndpoint" style="color:#94a3b8;">GET http://localhost:8000/api/multa</small>
+        </div>
+
+        <div id="mensajeEstado" class="alert" style="margin-top:0.9rem;display:none;"></div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Código Único</th>
+                    <th>Conductor (CI)</th>
+                    <th>Placa</th>
+                    <th>Fecha</th>
+                    <th>Tipo de Infracción / Lugar</th>
+                    <th>Monto (Bs)</th>
+                    <th>Estado</th>
+                    <th>Detalle Pago</th>
+                </tr>
+            </thead>
+            <tbody id="tablaMultas">
+                <tr><td colspan="8" style="text-align:center;color:#94a3b8;">Cargando boletas desde Central REST Laravel...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'http://localhost:8000/api/multa';
+
+    async function consultarBoletas() {
+        const codigo = document.getElementById('inputCodigo').value.trim();
+        const ci = document.getElementById('inputCi').value.trim();
+        let url = API_BASE;
+
+        if (codigo) {
+            url = `${API_BASE}/${encodeURIComponent(codigo)}`;
+        } else if (ci) {
+            url = `${API_BASE}?ci=${encodeURIComponent(ci)}`;
+        }
+
+        document.getElementById('lblEndpoint').textContent = `GET ${url}`;
+        const msgBox = document.getElementById('mensajeEstado');
+        const tbody = document.getElementById('tablaMultas');
+
+        try {
+            const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+            const json = await res.json();
+
+            let lista = [];
+            if (Array.isArray(json)) {
+                lista = json;
+            } else if (Array.isArray(json.data)) {
+                lista = json.data;
+            } else if (json.data && typeof json.data === 'object') {
+                lista = [json.data];
+            } else if (json.codigo_unico) {
+                lista = [json];
+            }
+
+            if (!res.ok || lista.length === 0) {
+                msgBox.style.display = 'block';
+                msgBox.innerHTML = `⚠️ <strong>${json.mensaje || 'No se encontraron boletas registradas con los criterios ingresados.'}</strong>`;
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#94a3b8;">Sin registros</td></tr>`;
+                return;
+            }
+
+            msgBox.style.display = 'block';
+            msgBox.innerHTML = `✅ Se encontraron <strong>${lista.length}</strong> boleta(s) registrada(s) en la Central de Registro.`;
+
+            tbody.innerHTML = lista.map(m => {
+                const est = (m.estado || 'pendiente').toLowerCase();
+                const badgeClass = est === 'pagada' ? 'badge-pagada' : (est === 'anulada' ? 'badge-anulada' : 'badge-pendiente');
+                const infoPago = est === 'pagada'
+                    ? `<small style="color:#34d399;">Pagada el ${m.fecha_pago || '-'}<br>(${m.entidad_pago || 'Entidad Recaudadora'})</small>`
+                    : `<small style="color:#94a3b8;">Pendiente de pago</small>`;
+                return `<tr>
+                    <td><strong style="color:#38bdf8;">${m.codigo_unico}</strong></td>
+                    <td>${m.nombre_conductor}<br><small style="color:#94a3b8;">CI: ${m.ci_conductor}</small></td>
+                    <td><code>${m.placa || 'S/N'}</code></td>
+                    <td>${m.fecha}</td>
+                    <td><strong>${m.tipo_infraccion}</strong><br><small style="color:#94a3b8;">📍 ${m.lugar}</small></td>
+                    <td><strong>Bs. ${Number(m.monto).toFixed(2)}</strong></td>
+                    <td><span class="badge ${badgeClass}">${m.estado}</span></td>
+                    <td>${infoPago}</td>
+                </tr>`;
+            }).join('');
+        } catch (err) {
+            msgBox.style.display = 'block';
+            msgBox.innerHTML = `❌ Error al conectar con el Servicio REST de la Central (${url}): ${err.message}`;
+        }
+    }
+
+    function limpiarYVerTodas() {
+        document.getElementById('inputCodigo').value = '';
+        document.getElementById('inputCi').value = '';
+        consultarBoletas();
+    }
+
+    consultarBoletas();
+    // Actualizar automáticamente cada 4 segundos para ver en tiempo real cuando el socket TCP cambia el estado a "pagada"
+    setInterval(consultarBoletas, 4000);
+</script>
+</body>
+</html>

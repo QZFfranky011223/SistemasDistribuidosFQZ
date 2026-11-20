@@ -1,0 +1,9 @@
+{
+  "name": "central-graphql-node",
+  "version": "1.0.0",
+  "description": "Servicio GraphQL en Node.js para la Central de Registro de Multas (consultas de la Entidad Recaudadora)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
